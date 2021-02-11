@@ -1,2 +1,0 @@
-# fluxnode
-FluxN0de

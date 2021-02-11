@@ -1,0 +1,68 @@
+<html>
+
+<head>
+    <title>Fluxn0de</title>
+</head>
+
+<body>
+    <script>
+        var wsUri = "ws://" + self.location.host + ":8888";
+
+        function connectWebSocket() {
+            websocket = new WebSocket(wsUri);
+            websocket.onopen = function (evt) { onOpen(evt) };
+            websocket.onclose = function (evt) { onClose(evt) };
+            websocket.onmessage = function (evt) { onMessage(evt) };
+            websocket.onerror = function (evt) { onError(evt) };
+        }
+
+        function onOpen(evt) {
+            setTimeout(sendTime, 10000);
+        }
+
+        function sendTime() {
+            console.log("send_time");
+            var dt = new Date();
+            var t = dt.getTime();
+            t = t / 1000;
+
+            var set_time_cmd = {
+                "cmd": "set_system_time",
+                "time": t
+            }
+            doSend(JSON.stringify(set_time_cmd));
+        }
+
+        function onMessage(evt) {
+            var e = JSON.parse(evt.data);
+            if (e.cmd == "log") {
+                console.log("Log:" + e.event);
+            }
+            if (e.cmd == "info") {
+                console.log("Info:" + evt.data);
+                console.log((e.system_time / 1000));
+            }
+        }
+
+        function onClose(evt) {
+            console.log("closed");
+            connectWebSocket();
+        }
+
+        function onError(evt) {
+
+        }
+
+        function doSend(message) {
+            if (websocket.readyState != 1) {
+                return;
+            }
+            websocket.send(message);
+        }
+
+        connectWebSocket();
+    </script>
+
+</body>
+
+</html>
