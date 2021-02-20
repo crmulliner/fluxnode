@@ -19,6 +19,8 @@ Fluxboard specs:
 
 # Board
 
+[Fluxboard v0.4 schematics](fluxboard_0.4.pdf)
+
 Two fluxboards, the board's full PINout documented on the backside.
 
 ![Fluxboard](fluxboard.jpeg)
