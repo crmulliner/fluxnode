@@ -85,7 +85,7 @@ static int stringToPosixFlags(const char *flags)
 
 /* jsondoc
 {
-"name": "write",
+"name": "write&nbsp;",
 "args": [
 {"name": "fd", "vtype": "uint", "text": "file descriptor"},
 {"name": "string", "vtype": "string", "text": "data"}
@@ -150,8 +150,7 @@ static duk_ret_t js_fs_write(duk_context *ctx)
 "name": "open",
 "args": [
 {"name": "path", "vtype": "string", "text": "file path"},
-{"name": "flags", "vtype": "string", "text": "flags ('r' and/or 'w')"},
-{"name": "mode", "vtype": "string", "text": "mode (unix mode)"}
+{"name": "flags", "vtype": "string", "text": "flags ('r', 'w', 'a', ...)"}
 ],
 "return": "file descriptor",
 "text": "Open file.",
@@ -487,7 +486,7 @@ static int fs_size_used(duk_context *ctx)
 static duk_function_list_entry fs_funcs[] = {
     {"close", js_fs_close, 1},
     {"fstat", js_fs_fstat, 1},
-    {"open", js_fs_open, 3},
+    {"open", js_fs_open, 2},
     {"read", js_fs_read, 5},
     {"listDir", js_fs_spiffsDir, 0},
     {"stat", js_fs_stat, 1},

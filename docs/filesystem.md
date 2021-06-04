@@ -12,12 +12,12 @@ under the Apache 2.0 license.
 - [fsSizeUsed](#fssizeused)
 - [fstat](#fstatfd)
 - [listDir](#listdir)
-- [open](#openpathflagsmode)
+- [open](#openpathflags)
 - [read](#readfdbufferbufferoffsetmaxreadpos)
 - [stat](#statpath)
 - [unlink](#unlinkpath)
-- [write](#writefdstring)
-- [write](#writefdstring)
+- [write](#writefdbufferoffsetlength)
+- [write&nbsp;](#write&nbsp;fdstring)
 
 ---
 
@@ -81,7 +81,7 @@ List files in the filesystem.
 
 ```
 
-## open(path,flags,mode)
+## open(path,flags)
 
 Open file.
 
@@ -95,13 +95,7 @@ Open file.
 
   type: string
 
-  flags ('r' and/or 'w')
-
-- mode
-
-  type: string
-
-  mode (unix mode)
+  flags ('r', 'w', 'a', ...)
 
 **Returns:** file descriptor
 
@@ -179,9 +173,9 @@ Unlink (delete) file.
 
 ```
 
-## write(fd,string)
+## write(fd,buffer,offset,length)
 
-Write string to file descriptor.
+Write to file descriptor.
 
 - fd
 
@@ -189,11 +183,23 @@ Write string to file descriptor.
 
   file descriptor
 
-- string
+- buffer
 
-  type: string
+  type: Plain Buffer
 
   data
+
+- offset
+
+  type: uint
+
+  offset (optional)
+
+- length
+
+  type: uint
+
+  length (optional)
 
 **Returns:** num bytes written
 
@@ -201,7 +207,7 @@ Write string to file descriptor.
 
 ```
 
-## write(fd,string)
+## write&nbsp;(fd,string)
 
 Write string to file descriptor.
 
