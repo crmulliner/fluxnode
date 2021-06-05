@@ -68,6 +68,7 @@ There are a number of examples applications that are installed by default. From 
 - [Crypto Test](examples/cryptotest.md) crypto API tests
 - [LoRaWanScan](examples/lorawanscan.md) LoRaWAN demo app
 - [BLE echo server](examples/ble_echo_server.md) BLE echo server
+- [FileSystem Test](examples/filesystem.md) FileSystem API tests
 
 ### Advanced
 

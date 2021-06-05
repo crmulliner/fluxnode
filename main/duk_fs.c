@@ -300,7 +300,7 @@ static duk_ret_t js_fs_stat(duk_context *ctx)
 {"name": "buffer", "vtype": "Plain Buffer", "text": "buffer"},
 {"name": "bufferOffset", "vtype": "uint", "text": "offset into the buffer"},
 {"name": "maxRead", "vtype": "uint", "text": "max num bytes to read"},
-{"name": "pos", "vtype": "uint", "text": "position in the file to read from"}
+{"name": "pos", "vtype": "uint", "text": "position in the file to read from (currently NOT supported)"}
 ],
 "return": "number of bytes read",
 "text": "Read from a file descriptor.",

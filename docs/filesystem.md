@@ -135,7 +135,7 @@ Read from a file descriptor.
 
   type: uint
 
-  position in the file to read from
+  position in the file to read from (currently NOT supported)
 
 **Returns:** number of bytes read
 
