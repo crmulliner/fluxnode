@@ -107,7 +107,6 @@ function sendUp(pkt, channel) {
 }
 
 function processLora(pkt) {
-    print(JSON.stringify(res) + "\n");
     res = scanState.lp.parseDownPacket(pkt);
     if (res.error == false && res.ack == true && res.micVerified == true) {
         print("got response for channel: " + scanState.channel + "\n");

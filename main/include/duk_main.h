@@ -31,7 +31,7 @@ typedef enum
 
 typedef int ui_msg_send_func(const uint8_t *buffer, const size_t len);
 
-int duk_main_add_full_event(event_msg_type msg_type, event_direction_type direction, uint8_t *payload, size_t len, int rssi, time_t ts);
+int duk_main_add_full_event(event_msg_type msg_type, const event_direction_type direction, uint8_t *payload, const size_t len, const int rssi, const int snr, const time_t ts);
 int duk_main_add_event(event_msg_type msg_type, event_direction_type direction, uint8_t *payload, size_t len);
 void duk_main_start();
 void duk_main_set_send_func(ui_msg_send_func *func);

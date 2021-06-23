@@ -47,6 +47,7 @@ struct event_msg_t
     event_direction_type msg_direction;
 
     int rssi;
+    int snr;
     time_t ts;
     uint8_t *payload;
     size_t payload_len;
@@ -115,10 +116,12 @@ static int send_event(duk_context *ctx, event_msg_ptr_t event)
         memcpy(buf, event->payload, event->payload_len);
         duk_put_prop_string(ctx, -2, "EventData");
     }
-    if (event->rssi)
+    if (event->msg_type == LORA_MSG)
     {
         duk_push_number(ctx, event->rssi);
         duk_put_prop_string(ctx, -2, "LoRaRSSI");
+        duk_push_number(ctx, event->snr);
+        duk_put_prop_string(ctx, -2, "LoRaSNR");
     }
     if (event->ts)
     {
@@ -221,7 +224,7 @@ void duk_main_set_send_func(ui_msg_send_func *func)
     g->send_func = func;
 }
 
-int duk_main_add_full_event(event_msg_type msg_type, event_direction_type direction, uint8_t *payload, size_t len, int rssi, time_t ts)
+int duk_main_add_full_event(event_msg_type msg_type, const event_direction_type direction, uint8_t *payload, const size_t len, const int rssi, const int snr, const time_t ts)
 {
     event_msg_ptr_t m = malloc(sizeof(event_msg_t));
     m->next = NULL;
@@ -231,6 +234,7 @@ int duk_main_add_full_event(event_msg_type msg_type, event_direction_type direct
     m->payload = payload;
     m->ts = ts;
     m->rssi = rssi;
+    m->snr = snr;
     m->payload_len = len;
     if (m->payload_len == 0 && m->payload != NULL)
     {
@@ -243,7 +247,7 @@ int duk_main_add_full_event(event_msg_type msg_type, event_direction_type direct
 
 int duk_main_add_event(event_msg_type msg_type, event_direction_type direction, uint8_t *payload, size_t len)
 {
-    return duk_main_add_full_event(msg_type, direction, payload, len, 0, 0);
+    return duk_main_add_full_event(msg_type, direction, payload, len, 0, 0, 0);
 }
 
 static void work_queue_delete(work_queue_t *q)
@@ -295,7 +299,7 @@ load:
     char *load_name = g->load_file;
     if (load_name == NULL)
     {
-        load_name = (char*) load_files[g->load_index];
+        load_name = (char *)load_files[g->load_index];
     }
 
 #ifdef DUK_MAIN_DEBUG
@@ -372,7 +376,8 @@ static void duktape_task(void *ignored)
             {
                 if (msg->msg_type == UI_MSG)
                 {
-                    if (g->send_func) {
+                    if (g->send_func)
+                    {
                         g->send_func(msg->payload, msg->payload_len);
                     }
                 }

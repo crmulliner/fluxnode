@@ -9,8 +9,8 @@ Most of the crypto APIs use Plain Buffers (https://wiki.duktape.org/howtobuffers
 
 ## Methods
 
-- [aes128CbcbDec](#aes128cbcbdeckeyivdatadata_len)
-- [aes128CbcbEnc](#aes128cbcbenckeyivdatadata_len)
+- [aes128CbcDec](#aes128cbcdeckeyivdatadata_len)
+- [aes128CbcEnc](#aes128cbcenckeyivdatadata_len)
 - [aes128Cmac](#aes128cmackeydatacmac)
 - [aes128EcbDec](#aes128ecbdeckeydata)
 - [aes128EcbEnc](#aes128ecbenckeydata)
@@ -18,7 +18,7 @@ Most of the crypto APIs use Plain Buffers (https://wiki.duktape.org/howtobuffers
 
 ---
 
-## aes128CbcbDec(key,iv,data,data_len)
+## aes128CbcDec(key,iv,data,data_len)
 
 Decrypt using AES 128 in CBC mode.
 
@@ -52,7 +52,7 @@ Decrypt using AES 128 in CBC mode.
 
 ```
 
-## aes128CbcbEnc(key,iv,data,data_len)
+## aes128CbcEnc(key,iv,data,data_len)
 
 Encrypt using AES 128 in CBC mode.
 

@@ -131,7 +131,7 @@ static duk_ret_t aes_128_ecb_decrypt(duk_context *ctx)
 
 /* jsondoc
 {
-"name": "aes128CbcbEnc",
+"name": "aes128CbcEnc",
 "args": [
 {"name": "key", "vtype": "plain buffer", "text": "encryption key 16 bytes"},
 {"name": "iv", "vtype": "plain buffer", "text": "IV 16 bytes"},
@@ -184,7 +184,7 @@ static duk_ret_t aes_128_cbc_encrypt(duk_context *ctx)
 
 /* jsondoc
 {
-"name": "aes128CbcbDec",
+"name": "aes128CbcDec",
 "args": [
 {"name": "key", "vtype": "plain buffer", "text": "decryption key 16 bytes"},
 {"name": "iv", "vtype": "plain buffer", "text": "IV 16 bytes"},

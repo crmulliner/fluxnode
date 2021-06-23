@@ -22,7 +22,7 @@
 
 /* jsondoc
 {
-"class": "Platform",
+"class": "FileSystem",
 "longtext": "
 Documentation for the FileSystem API.
 
@@ -73,7 +73,7 @@ static int stringToPosixFlags(const char *flags)
 "args": [
 {"name": "fd", "vtype": "uint", "text": "file descriptor"},
 {"name": "buffer", "vtype": "Plain Buffer", "text": "data"},
-{"name": "offset", "vtype": "uint", "text": "offset (optional)"},
+{"name": "bufferOffset", "vtype": "uint", "text": "offset in the buffer (optional)"},
 {"name": "length", "vtype": "uint", "text": "length (optional)"}
 ],
 "text": "Write to file descriptor.",
@@ -258,6 +258,44 @@ static duk_ret_t js_fs_fstat(duk_context *ctx)
 
 /* jsondoc
 {
+"name": "seek",
+"args": [
+{"name": "fd", "vtype": "uint", "text": "file descriptor"},
+{"name": "offset", "vtype": "uint", "text": "offset"},
+{"name": "whence", "vtype": "int", "text": "whence 0 = SET, 1 = CUR, 2 = END"}
+],
+"return": "current position in the file",
+"text": "seek to a specific offset in the file. This implements lseek(2)",
+"example": "
+FileSystem.seek(fp, 0, 2); // seek to end of file
+"
+}
+*/
+static duk_ret_t js_fs_seek(duk_context *ctx)
+{
+    int fd = duk_require_int(ctx, 0);
+    size_t offset = duk_require_uint(ctx, 1);
+    int whence = duk_require_int(ctx, 2);
+    switch (whence)
+    {
+    case 0:
+        whence = SEEK_SET;
+        break;
+    case 1:
+        whence = SEEK_CUR;
+        break;
+    case 2:
+        whence = SEEK_END;
+        break;
+    }
+
+    offset = lseek(fd, offset, whence);
+    duk_push_int(ctx, offset);
+    return 1;
+}
+
+/* jsondoc
+{
 "name": "stat",
 "args": [
 {"name": "path", "vtype": "string", "text": "filepath"}
@@ -299,8 +337,7 @@ static duk_ret_t js_fs_stat(duk_context *ctx)
 {"name": "fd", "vtype": "int", "text": "file descriptor"},
 {"name": "buffer", "vtype": "Plain Buffer", "text": "buffer"},
 {"name": "bufferOffset", "vtype": "uint", "text": "offset into the buffer"},
-{"name": "maxRead", "vtype": "uint", "text": "max num bytes to read"},
-{"name": "pos", "vtype": "uint", "text": "position in the file to read from (currently NOT supported)"}
+{"name": "maxRead", "vtype": "uint", "text": "max num bytes to read"}
 ],
 "return": "number of bytes read",
 "text": "Read from a file descriptor.",
@@ -320,7 +357,6 @@ static duk_ret_t js_fs_read(duk_context *ctx)
 
     size_t maxToRead = duk_require_int(ctx, 3);
 
-    //size_t position = duk_require_int(ctx, 4);
     ssize_t sizeRead = 0;
     duk_size_t bufferSize;
 
@@ -486,8 +522,9 @@ static int fs_size_used(duk_context *ctx)
 static duk_function_list_entry fs_funcs[] = {
     {"close", js_fs_close, 1},
     {"fstat", js_fs_fstat, 1},
+    {"seek", js_fs_seek, 3},
     {"open", js_fs_open, 2},
-    {"read", js_fs_read, 5},
+    {"read", js_fs_read, 4},
     {"listDir", js_fs_spiffsDir, 0},
     {"stat", js_fs_stat, 1},
     {"unlink", js_fs_unlink, 1},

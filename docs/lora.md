@@ -48,6 +48,7 @@ function OnEvent(evt) {
   if (evt.EventType == 1) {
     pkt = evt.EventData;
     rssi = evt.LoRaRSSI;
+    snr = evt.LoRaSNR;
     timestamp = evt.TimeStamp;
   }
 }

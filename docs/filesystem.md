@@ -1,4 +1,4 @@
-# Platform
+# FileSystem
 
 Documentation for the FileSystem API.
 
@@ -13,10 +13,11 @@ under the Apache 2.0 license.
 - [fstat](#fstatfd)
 - [listDir](#listdir)
 - [open](#openpathflags)
-- [read](#readfdbufferbufferoffsetmaxreadpos)
+- [read](#readfdbufferbufferoffsetmaxread)
+- [seek](#seekfdoffsetwhence)
 - [stat](#statpath)
 - [unlink](#unlinkpath)
-- [write](#writefdbufferoffsetlength)
+- [write](#writefdbufferbufferoffsetlength)
 - [write&nbsp;](#write&nbsp;fdstring)
 
 ---
@@ -103,7 +104,7 @@ Open file.
 
 ```
 
-## read(fd,buffer,bufferOffset,maxRead,pos)
+## read(fd,buffer,bufferOffset,maxRead)
 
 Read from a file descriptor.
 
@@ -131,15 +132,38 @@ Read from a file descriptor.
 
   max num bytes to read
 
-- pos
-
-  type: uint
-
-  position in the file to read from (currently NOT supported)
-
 **Returns:** number of bytes read
 
 ```
+
+```
+
+## seek(fd,offset,whence)
+
+seek to a specific offset in the file. This implements lseek(2)
+
+- fd
+
+  type: uint
+
+  file descriptor
+
+- offset
+
+  type: uint
+
+  offset
+
+- whence
+
+  type: int
+
+  whence 0 = SET, 1 = CUR, 2 = END
+
+**Returns:** current position in the file
+
+```
+FileSystem.seek(fp, 0, 2); // seek to end of file
 
 ```
 
@@ -173,7 +197,7 @@ Unlink (delete) file.
 
 ```
 
-## write(fd,buffer,offset,length)
+## write(fd,buffer,bufferOffset,length)
 
 Write to file descriptor.
 
@@ -189,11 +213,11 @@ Write to file descriptor.
 
   data
 
-- offset
+- bufferOffset
 
   type: uint
 
-  offset (optional)
+  offset in the buffer (optional)
 
 - length
 

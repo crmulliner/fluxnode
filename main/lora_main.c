@@ -110,13 +110,14 @@ static void isr_recv_task(void *arg)
             uint8_t *buf = malloc(LORA_MSG_MAX_SIZE + 1);
             int bytes_recv = lora_receive_packet(buf, LORA_MSG_MAX_SIZE + 1);
             int rssi = lora_packet_rssi();
+            int snr = lora_packet_snr();
             lora_receive();
 #ifdef LORA_MAIN_DEBUG
             logprintf("LoRa received: %d bytes\n", bytes_recv);
 #endif
             if (bytes_recv > 0)
             {
-                duk_main_add_full_event(LORA_MSG, INCOMING, buf, bytes_recv, rssi, time(NULL));
+                duk_main_add_full_event(LORA_MSG, INCOMING, buf, bytes_recv, rssi, snr, time(NULL));
             }
         }
     }
@@ -137,6 +138,7 @@ function OnEvent(evt) {
   if (evt.EventType == 1) {
     pkt = evt.EventData;
     rssi = evt.LoRaRSSI;
+    snr = evt.LoRaSNR;
     timestamp = evt.TimeStamp;
   }
 }
