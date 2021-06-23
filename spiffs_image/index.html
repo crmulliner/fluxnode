@@ -40,7 +40,7 @@
             }
             if (e.cmd == "info") {
                 console.log("Info:" + evt.data);
-                console.log((e.system_time / 1000));
+                console.log("Uptime: " + (e.system_time / 1000) - e.boot_time);
             }
         }
 

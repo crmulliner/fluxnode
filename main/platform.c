@@ -26,6 +26,8 @@
 #include "board.h"
 #include "log.h"
 
+extern time_t boottime;
+
 //#define PLATFORM_DEBUG 1
 
 /* jsondoc
@@ -56,6 +58,7 @@ Event = {
     EventType: uint,
     EventData: Uint8Array.plain(),
     LoRaRSSI: int,
+    LoRaSNR: int,
     TimeStamp: uint,
     NumPress: uint,
 }
@@ -77,10 +80,13 @@ function EventName(event) {
 **EventData (Plain Buffer)** contains the event payload
 in the case of ui or lora events. See: https://wiki.duktape.org/howtobuffers2x
 
-**LoRaRSSI (uint)** is set for lora events 
+**LoRaRSSI (uint)** is set for lora events
 and indicates the RSSI of the packet.
 
-**TimeStamp (uint)** is set for lora events 
+**LoRaSNR (uint)** is set for lora events
+and indicates the SNR of the packet.
+
+**TimeStamp (uint)** is set for lora events
 and indicates the time of when the packet was received.
 
 **NumPress (uint)** is set for button events
@@ -178,7 +184,14 @@ static int set_system_time(duk_context *ctx)
     tz.tz_minuteswest = 0;
     tz.tz_dsttime = 0;
 
+    // adjust boottime
+    if (boottime < 299000000)
+    {
+        boottime = newtime - boottime;
+    }
+
     settimeofday(&tv, &tz);
+
 #ifdef PLATFORM_DEBUG
     time_t now;
     char strftime_buf[64];
@@ -1036,11 +1049,27 @@ static int load_library(duk_context *ctx)
     return 1;
 }
 
+/* jsondoc
+{
+"name": "getBootime",
+"args": [],
+"text": "get boot time",
+"return": "time of system boot up",
+"example": "
+"
+}
+*/
+static int get_boottime(duk_context *ctx)
+{
+    duk_push_uint(ctx, boottime);
+    return 1;
+}
+
 static duk_function_list_entry platform_funcs[] = {
     {"getFreeHeap", heap_free, 0},
+    {"getFreeInternalHeap", heap_internal_free, 0},
     {"gpioWrite", gpio_output, 2},
     {"gpioRead", gpio_input, 1},
-    {"getFreeInternalHeap", heap_internal_free, 0},
     {"isButtonPressed", is_button_pressed, 0},
     {"setSystemTime", set_system_time, 1},
     {"getBatteryStatus", get_battery_status, 0},
@@ -1065,6 +1094,7 @@ static duk_function_list_entry platform_funcs[] = {
     {"stopLEDBlink", led_blink_stop, 1},
     {"reset", reset, 0},
     {"reboot", reboot, 0},
+    {"getBoottime", get_boottime, 0},
     {"setLoadFileName", set_load_file, 1},
     {"setTimer", set_timer, 1},
     {"sendEvent", send_event, 2},

@@ -21,7 +21,9 @@
 #include "board.h"
 #include "vfs_config.h"
 #include "log.h"
+#include <time.h>
 
+time_t boottime;
 
 void app_main()
 {
@@ -46,6 +48,8 @@ void app_main()
 
     // board specific init, e.g. power managenent and wakeup
     board->board_init();
+
+    boottime = time(0);
 
     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
     // enable auto sleep

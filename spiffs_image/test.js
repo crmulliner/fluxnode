@@ -39,6 +39,7 @@ function sendInfo() {
         client_id: Platform.getClientID(),
         boardname: Platform.BoardName,
         system_time: d.getTime(),
+        boot_time: Platform.getBoottime(),
         wifi_mac: Platform.wifiGetMacAddr(),
         ble_addr: Platform.bleGetDeviceAddr(),
         flash_size: Platform.FlashSize,
