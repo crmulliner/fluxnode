@@ -24,6 +24,7 @@ Event = {
     EventType: uint,
     EventData: Uint8Array.plain(),
     LoRaRSSI: int,
+    LoRaSNR: int,
     TimeStamp: uint,
     NumPress: uint,
 }
@@ -45,10 +46,13 @@ function EventName(event) {
 **EventData (Plain Buffer)** contains the event payload
 in the case of ui or lora events. See: https://wiki.duktape.org/howtobuffers2x
 
-**LoRaRSSI (uint)** is set for lora events 
+**LoRaRSSI (uint)** is set for lora events
 and indicates the RSSI of the packet.
 
-**TimeStamp (uint)** is set for lora events 
+**LoRaSNR (uint)** is set for lora events
+and indicates the SNR of the packet.
+
+**TimeStamp (uint)** is set for lora events
 and indicates the time of when the packet was received.
 
 **NumPress (uint)** is set for button events
@@ -109,6 +113,7 @@ the output of the ESP32 hw random generator.
 - [getBatteryMVolt](#getbatterymvolt)
 - [getBatteryPercent](#getbatterypercent)
 - [getBatteryStatus](#getbatterystatus)
+- [getBootime](#getbootime)
 - [getClientConnected](#getclientconnected)
 - [getClientID](#getclientid)
 - [getConnectivity](#getconnectivity)
@@ -243,6 +248,16 @@ Get the battery charging status. 0 = draining, 1 = charging
 if (Platform.getBatteryStatus() == 1) {
     print('battery is charging\n');
 }
+
+```
+
+## getBootime()
+
+get boot time
+
+**Returns:** time of system boot up
+
+```
 
 ```
 
