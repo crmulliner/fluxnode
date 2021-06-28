@@ -9,27 +9,40 @@ var DeviceAddrHex = "xxxxxx";
 var AppKeyHex = "";
 var NwkKeyHex = "";
 
-// --- do not change ---
+var mode = 1; // 0 = scan, 1 = listen for class B beacon
+
+// --- do not change below ---
 var scanState = {};
+var packetCallback = processLora;
 
 function OnStart() {
 
     Platform.loadLibrary("/wifimgnt.js");
     Platform.loadLibrary("/lorawanlib.js");
     Platform.loadLibrary("/timer.js");
+    Platform.loadLibrary("/util.js");
 
     startWifi(wifi_ssid, wifi_pass);
 
-    if (AppKeyHex.length == 0 || NwkKeyHex.length == 0 || DeviceAddrHex.length == 0) {
-        print("\n\nConfiguration Needed!\n\nSet DeviceAddr, AppKey, and NwkKey from your LoraWAN console!!\n\n");
-        print("Only ABP is supported!\n\n")
-        return;
+    if (mode == 0) {
+        if (AppKeyHex.length == 0 || NwkKeyHex.length == 0 || DeviceAddrHex.length == 0) {
+            print("\n\nConfiguration Needed!\n\nSet DeviceAddr, AppKey, and NwkKey from your LoraWAN console!!\n\n");
+            print("Only ABP is supported!\n\n")
+            return;
+        }
+
+        startScan();
+        packetCallback = processLora;
     }
-    startScan();
+    if (mode == 1) {
+        print("Listening for Beacons...\n");
+        listenNext();
+        packetCallback = processListen;
+    }
 }
 
 function startScan() {
-    print("startScan\n");
+    print("Start scanning...\n");
     var addr = hexToBin(DeviceAddrHex);
     var appkey = hexToBin(AppKeyHex);
     var nwkkey = hexToBin(NwkKeyHex);
@@ -61,6 +74,15 @@ function scanNext() {
     }
 }
 
+function processLora(pkt) {
+    res = scanState.lp.parseDownPacket(pkt);
+    if (res.error == false && res.ack == true && res.micVerified == true) {
+        print("got response for channel: " + scanState.channel + "\n");
+        scanState.answers.push(scanState.channel);
+        print(JSON.stringify(res) + "\n");
+    }
+}
+
 function sendUp(pkt, channel) {
     var chans = loraWanUpDownChannel915(channel);
     print("sending on: " + chans.upFreq + "\n");
@@ -69,25 +91,8 @@ function sendUp(pkt, channel) {
         print("send freq error\n");
     }
 
-    if (channel > 63) {
-        print("DR4\n");
-        if (!LoRa.setBW(500E3)) {
-            print("set bw error\n");
-        }
-        if (!LoRa.setSF(8)) {
-            print("set sf error\n");
-        }
-    }
-    if (channel < 64) {
-        print("DR3\n");
-        if (!LoRa.setBW(125E3)) {
-            print("set bw error\n");
-        }
-        if (!LoRa.setSF(7)) {
-            print("set sf error\n");
-        }
-    }
-
+    LoRa.setBW(chans.bw);
+    LoRa.setSF(chans.sf);
     LoRa.setTxPower(17);
     LoRa.setPreambleLen(8);
     LoRa.setIQMode(false);
@@ -106,18 +111,26 @@ function sendUp(pkt, channel) {
     LoRa.loraReceive();
 }
 
-function processLora(pkt) {
-    res = scanState.lp.parseDownPacket(pkt);
-    if (res.error == false && res.ack == true && res.micVerified == true) {
-        print("got response for channel: " + scanState.channel + "\n");
-        scanState.answers.push(scanState.channel);
-        print(JSON.stringify(res) + "\n");
+function processListen(pkt) {
+    print("Channel: " + scanState.channel + "\n");
+    print("Data: " + binToHex(pkt) + "\n");
+    var beacon = loraWanBeaconDecode(pkt, 0);
+    print(JSON.stringify(beacon)+"\n");
+    listenNext();
+}
+
+function listenNext() {
+    if (scanState.channel < 7) {
+        scanState.channel++;
+    } else {
+        scanState.channel = 0;
     }
+    loraWanBeaconListen(scanState.channel, 0);
 }
 
 function OnEvent(event) {
     print(JSON.stringify(event) + "\n");
     if (event.EventType == 0) {
-        processLora(event.EventData);
+        packetCallback(event.EventData);
     }
 }

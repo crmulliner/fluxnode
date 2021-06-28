@@ -11,4 +11,4 @@ queue:
 	./queue_test >/dev/null 2>&1
 
 jstest:
-	gcc -o jstest jstest.c ../main/duk_util.c ../components/duktape/esp32_glue.c ../components/duktape/duktape.c -I ../main/include -I ../components/duktape/include -lm
+	gcc -D__JSTEST__ -o jstest jstest.c ../main/duk_util.c ../components/duktape/esp32_glue.c ../components/duktape/duktape.c -I ../main/include -I ../components/duktape/include -lm

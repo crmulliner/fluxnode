@@ -24,6 +24,7 @@ Fluxn0de is:
 ## JavaScript Libraries
 - [Timer](timer.md) Timer library that provides basic timer functionality
 - [LoRaWan](lorawanlib.md) Basic LoRaWAN library
+- [Util](util.md) Utility library
 
 ## Boards
 - [Adafruit Huzzah](huzzah.md)

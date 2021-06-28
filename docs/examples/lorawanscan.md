@@ -6,7 +6,13 @@ The Things Network (TTN).
 This example shows how to use:
 - LoRa API
 - LoRaWan Library
-- timer Library
+- Timer Library
+
+By default this demo will receive and decode ClassB Beacons.
+No TTN account is required for this.
+
+To run the full LoRaWANScan example edit lorawanscan.js
+and set the mode to 0 and add the device details from your TTN account.
 
 Requirements:
 - [TTN](https://www.thethingsnetwork.org/) account

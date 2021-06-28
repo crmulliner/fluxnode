@@ -2,6 +2,10 @@
 
 This is a very basic LoRaWAN library.
 
+Requirements: util.js
+
+ `Platform.loadLibrary('/util.js');`
+
 Supported features:
 - Activation Method: ABP
 - send confirmed / un-confirmed message
@@ -22,13 +26,10 @@ Unsupported:
 - [LoraWanPacket.makePacketFromPayLoad](#lorawanpacket.makepacketfrompayloadpayloadpkttypefportfcntlfcntdir)
 - [LoraWanPacket.parseDownPacket](#lorawanpacket.parsedownpacketpacket)
 - [LoraWanPacket.unConfirmedUp](#lorawanpacket.unconfirmeduppayloadfportfcnt)
-- [arrayEqual](#arrayequalab)
-- [binToHex](#bintohexbin)
-- [hexToBin](#hextobinhex)
-- [htons](#htonsnumber)
+- [loraWanBeaconDecode](#lorawanbeacondecodepktregion)
+- [loraWanBeaconListen](#lorawanbeaconlistenchannelregion)
 - [loraWanChannel915](#lorawanchannel915channeldirection)
 - [loraWanUpDownChannel915](#lorawanupdownchannel915channel)
-- [reverse](#reversebin)
 
 ---
 
@@ -37,12 +38,16 @@ Unsupported:
 Create a LoraWanPacket instance using device address, network key, and application key.
 All packet operations will use the address and keys to encode and decode packets.
 
+Configure the frame counter length by setting member variable fcntLen to 2 for 16bit and 4 fore 32bit.
+The default is 16bit.
+
 The instance will contain the following members:
 ```
  {
     devAddr: plainBuffer,
     nwkKey: plainBuffer,
     appKey: plainBuffer,
+    fcntLen: int,
     makePacketFromPayLoad: function,
     unConfirmedUp: function,
     confirmedUp: function,
@@ -262,73 +267,67 @@ pkt = lwp.unConfirmedUp(payload, fport, fcnt);
 
 ```
 
-## arrayEqual(a,b)
+## loraWanBeaconDecode(pkt,region)
 
-compare two arrays
+Decode a LoRaWAN Class B beacon.
 
-- a
+The beacon object contains the following members:
+```
+{
+    error: boolean,
+    msg: string, // if error == true
+    region: int,
+    time: uint,
+    time_crc: boolean,
+    info: uint8,
+    info_crc: boolean,
+    lat: int,
+    lon: int,
+}
+```
 
-  type: array
 
-  a
+- pkt
 
-- b
+  type: plain buffer
 
-  type: array
+  packet buffer
 
-  b
+- region
+
+  type: int
+
+  LoRaWAN region: 0 = us-915
+
+**Returns:** Beacon object
+
+```
+var beacon = loraWanBeaconDecode(pkt, 0)
+print(beacon.time);
+
+```
+
+## loraWanBeaconListen(channel,region)
+
+Configure the LoRa modem for receiving class B beacons on a specific channel.
+
+
+- channel
+
+  type: int
+
+  channel 0-7
+
+- region
+
+  type: int
+
+  LoRaWAN region: 0 = us-915
 
 **Returns:** boolean
 
 ```
-
-```
-
-## binToHex(bin)
-
-convert a plain buffer to a hex string
-
-- bin
-
-  type: plainbuffer
-
-  binary buffer
-
-**Returns:** string
-
-```
-
-```
-
-## hexToBin(hex)
-
-convert hex string to a plain buffer
-
-- hex
-
-  type: string
-
-  hex string
-
-**Returns:** plain buffer
-
-```
-
-```
-
-## htons(number)
-
-convert host to network byte order short (uint16)
-
-- number
-
-  type: uint16
-
-  uint16
-
-**Returns:** uint16
-
-```
+loraWanBeaconListen(0, 0);
 
 ```
 
@@ -346,7 +345,7 @@ Get the US-915 frequency for a given channel and direction
 
   type: int
 
-  0 = up 1 = down
+  0 = up, 1 = down
 
 **Returns:** frequency
 
@@ -357,12 +356,13 @@ var freq = loraWanChannel915(1, 0);
 
 ## loraWanUpDownChannel915(channel)
 
-Get the up,down, and 2nd down frequency for a given channel in US-915.
+Get the up, down, and 2nd down frequency for a given channel in US-915.
 The channel object contains the following members:
 ```
 {
     channel: uint,
     sf: uint,
+    bw: uint,
     upFreq: double,
     downFreq: double,
     down2Freq: double,
@@ -380,22 +380,6 @@ The channel object contains the following members:
 
 ```
 var loraRadioSettings = loraWanUpDownChannel915(1);
-
-```
-
-## reverse(bin)
-
-reverse the bytes in a plain buffer
-
-- bin
-
-  type: plainbuffer
-
-  binary buffer
-
-**Returns:** plain buffer
-
-```
 
 ```
 

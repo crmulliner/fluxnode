@@ -14,6 +14,7 @@ flash:
 docs:
 	./scripts/json2mddoc.py spiffs_image/timer.js >docs/timer.md
 	./scripts/json2mddoc.py spiffs_image/lorawanlib.js >docs/lorawanlib.md
+	./scripts/json2mddoc.py spiffs_image/util.js >docs/util.md
 	./scripts/json2mddoc.py main/duk_fs.c >docs/filesystem.md
 	./scripts/json2mddoc.py main/lora_main.c >docs/lora.md
 	./scripts/json2mddoc.py main/web_service.c >docs/webservice.md
