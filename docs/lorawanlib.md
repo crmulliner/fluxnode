@@ -311,6 +311,16 @@ print(beacon.time);
 ## loraWanBeaconGetNextChannel()
 
 Get the channel number for the next beacon and seconds until the beacon arrives on the channel.
+This relies on the device having a accurate system time.
+
+The next channel object contains the following members:
+
+```
+{
+    channel: int,           // next channel a beacon will arrive
+    nextBeaconSeconds: int, // number of seconds before beacon arrives
+}
+```
 
 
 **Returns:** next channel object
