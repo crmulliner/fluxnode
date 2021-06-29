@@ -460,6 +460,8 @@ function loraWanUpDownChannel915(channel) {
     };
 }
 
+var __gpsEpoch = 315964800;
+
 /* jsondoc
 {
 "name": "loraWanBeaconDecode",
@@ -477,7 +479,7 @@ The beacon object contains the following members:
     error: boolean,
     msg: string, // if error == true
     region: int,
-    time: uint,
+    time: uint, // UTC
     time_crc: boolean,
     info: uint8,
     info_crc: boolean,
@@ -520,7 +522,6 @@ function loraWanBeaconDecode(pkt, region) {
     timeView.setUint8(2, pkt[pad + 3]);
     timeView.setUint8(3, pkt[pad + 4]);
     var tm = timeView.getUint32(0, true);
-    var gpsEpoch = 315982800;
 
     // time stamp crc
     var buf = new ArrayBuffer(2);
@@ -571,7 +572,7 @@ function loraWanBeaconDecode(pkt, region) {
     return {
         error: false,
         region: region,
-        time: gpsEpoch + tm,
+        time: __gpsEpoch + tm,
         time_crc: time_crc,
         info: _infoDesc[0],
         info_crc: info_crc,
@@ -618,4 +619,31 @@ function loraWanBeaconListen(channel, region) {
     }
 
     return false;
+}
+
+/* jsondoc
+{
+"name": "loraWanBeaconGetNextChannel",
+"args": [
+],
+"return": "next channel object",
+"longtext": "
+Get the channel number for the next beacon and seconds until the beacon arrives on the channel.
+",
+"example": "
+var nextBeaconChannel = loraWanBeaconGetNextChannel();
+print(nextBeaconChannel.channel);
+"
+}
+*/
+function loraWanBeaconGetNextChannel() {
+    var leapseconds = 18;
+    var n = Math.floor(new Date().getTime() / 1000);
+    var rel = n - __gpsEpoch + leapseconds;
+    var channelDiff = 128 - Math.floor(rel % 128);
+    var channel = 1 + Math.floor(rel % (128 * 8) / 128);
+    return {
+        channel: channel,
+        nextBeaconSeconds: channelDiff,
+    }
 }

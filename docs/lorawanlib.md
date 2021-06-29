@@ -27,6 +27,7 @@ Unsupported:
 - [LoraWanPacket.parseDownPacket](#lorawanpacket.parsedownpacketpacket)
 - [LoraWanPacket.unConfirmedUp](#lorawanpacket.unconfirmeduppayloadfportfcnt)
 - [loraWanBeaconDecode](#lorawanbeacondecodepktregion)
+- [loraWanBeaconGetNextChannel](#lorawanbeacongetnextchannel)
 - [loraWanBeaconListen](#lorawanbeaconlistenchannelregion)
 - [loraWanChannel915](#lorawanchannel915channeldirection)
 - [loraWanUpDownChannel915](#lorawanupdownchannel915channel)
@@ -277,7 +278,7 @@ The beacon object contains the following members:
     error: boolean,
     msg: string, // if error == true
     region: int,
-    time: uint,
+    time: uint, // UTC
     time_crc: boolean,
     info: uint8,
     info_crc: boolean,
@@ -304,6 +305,19 @@ The beacon object contains the following members:
 ```
 var beacon = loraWanBeaconDecode(pkt, 0)
 print(beacon.time);
+
+```
+
+## loraWanBeaconGetNextChannel()
+
+Get the channel number for the next beacon and seconds until the beacon arrives on the channel.
+
+
+**Returns:** next channel object
+
+```
+var nextBeaconChannel = loraWanBeaconGetNextChannel();
+print(nextBeaconChannel.channel);
 
 ```
 

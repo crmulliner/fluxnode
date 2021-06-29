@@ -36,6 +36,12 @@ function OnStart() {
     }
     if (mode == 1) {
         print("Listening for Beacons...\n");
+        scanState = { channel: -1 };
+        if (new Date().getTime() > __gpsEpoch) {
+            var bChan = loraWanBeaconGetNextChannel();
+            print(JSON.stringify(bChan) + "\n");
+            scanState.channel = bChan.channel - 1;
+        }
         listenNext();
         packetCallback = processListen;
     }
@@ -115,7 +121,11 @@ function processListen(pkt) {
     print("Channel: " + scanState.channel + "\n");
     print("Data: " + binToHex(pkt) + "\n");
     var beacon = loraWanBeaconDecode(pkt, 0);
-    print(JSON.stringify(beacon)+"\n");
+    if (beacon.time_crc) {
+        Platform.setSystemTime(beacon.time + 1);
+    }
+    print(JSON.stringify(beacon) + "\n");
+    print(new Date() + "\n");
     listenNext();
 }
 
