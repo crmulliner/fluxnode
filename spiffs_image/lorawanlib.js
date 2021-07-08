@@ -77,7 +77,12 @@ function LoraWanPacket(devAddr, nwkKey, appKey) {
         confirmedUp: __confirmedUp,
         ackPacket: __makeAck,
         parseDownPacket: __parseDownPacket,
+        unConfirmedDown: __unConfirmedDown,
     }
+}
+
+function __unConfirmedDown(payload, fport, fcnt) {
+    return this.makePacketFromPayLoad(payload, 0x60, fport, 0, fcnt, 1);
 }
 
 /* jsondoc
@@ -132,18 +137,12 @@ function __parseDownPacket(pkt) {
     var addr = new Uint8Array(4);
     addr.set(pkt.subarray(1, 5), 0);
     var FCTRL = pkt[5];
-    var buf = new ArrayBuffer(this.fcntLen);
+    var buf = new ArrayBuffer(2);
     var fcntbytes = new DataView(buf);
-    for (var i = 0; i < this.fcntLen; i++) {
-        fcntbytes.setUint8(i, pkt[6 + i]);
-    }
+    fcntbytes.setUint8(0, pkt[6]);
+    fcntbytes.setUint8(1, pkt[7]);
     var FCNT = 0;
-    if (this.fcntLen == 2) {
-        FCNT = fcntbytes.getUint16(0, true);
-    }
-    else if (this.fcntLen == 4) {
-        FCNT = fcntbytes.getUint32(0, true);
-    }
+    FCNT = fcntbytes.getUint16(0, true);
     var FOPSLEN = FCTRL & 0x0f;
     //print(FOPSLEN);
     var FOPS = new Uint8Array(FOPSLEN);
@@ -153,7 +152,6 @@ function __parseDownPacket(pkt) {
         FOPS.set(pkt.subarray(data_idx, data_idx + FOPSLEN), 0);
         data_idx += FOPSLEN;
     }
-
     var micOk = __checkMic(pkt, this.nwkKey, FCNT, addr, 1);
     var payload = new Uint8Array(0);
     var FPORT = new Uint8Array(0);
@@ -254,7 +252,7 @@ function __makeAck(fport, fcnt) {
 {"name": "payload", "vtype": "plain buffer", "text": "payload"},
 {"name": "pkttype", "vtype": "uint8", "text": "packet type"},
 {"name": "fport", "vtype": "uint", "text": "fport"},
-{"name": "fcntl", "vtype": "plain buffer", "text": "fcntl"},
+{"name": "fcrtl", "vtype": "plain buffer", "text": "fcrtl"},
 {"name": "fcnt", "vtype": "uint16", "text": "frame counter"},
 {"name": "dir", "vtype": "int", "text": "direction 0 = up, 1 = down"}
     ],
@@ -274,7 +272,7 @@ pkt = lwp.makePacketFromPayLoad(payload, 0x40, fport, 0, fcnt, 0);
 function __makePacketFromPayLoad(payload, pkttype, fport, fctrl, fcnt, dir) {
     var MHDR = new Uint8Array(1);
     MHDR[0] = pkttype;
-    var FHDR = __makeFhdrNoFopts(this.devAddr, fctrl, fcnt, this.fcntLen);
+    var FHDR = __makeFhdrNoFopts(this.devAddr, fctrl, fcnt);
     var FPORT = __makeFport(fport);
 
     var pkt = new Uint8Array(MHDR.length + FHDR.length + FPORT.length + payload.length);
@@ -322,18 +320,13 @@ function __makeFport(port) {
 }
 
 // Fopts not supported
-function __makeFhdrNoFopts(addr, fctrl, fcnt, fcntLen) {
-    // ADDR (4) FCTRL (1) FCnt (2or4) Fopts (0-15)
-    var FHDR = new Uint8Array(5 + fcntLen);
+function __makeFhdrNoFopts(addr, fctrl, fcnt) {
+    // ADDR (4) FCTRL (1) FCnt (2) Fopts (0-15)
+    var FHDR = new Uint8Array(7);
     FHDR.set(addr, 0);
     FHDR[4] = fctrl;
-    var tmp = new ArrayBuffer(fcntLen);
-    if (fcntLen == 2) {
-        new DataView(tmp).setUint16(0, fcnt, true);
-    }
-    if (fcntLen == 4) {
-        new DataView(tmp).setUint32(0, fcnt, true);
-    }
+    var tmp = new ArrayBuffer(2);
+    new DataView(tmp).setUint16(0, fcnt, true);
     FHDR.set(tmp, 5);
     return FHDR;
 }
