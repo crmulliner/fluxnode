@@ -180,16 +180,43 @@ function reverse(input) {
 
 /* jsondoc
 {
-"name": "htons",
+"name": "hton[s|l]",
 "args": [
-{"name": "number", "vtype": "uint16", "text": "uint16"}
+{"name": "number", "vtype": "uint16/32", "text": "uint16/32"}
     ],
-"return": "uint16",
-"text": "convert host to network byte order short (uint16)",
+"return": "uint16/32",
+"text": "convert host to network byte order (uint16/32)",
 "example": "
 "
 }
 */
 function htons(num) {
     return (num >> 8) | ((num & 0xff) << 8);
+}
+
+function htonl(num) {
+    print("htonl\n");
+    return (num >> 24) | ((num & 0x00ff0000) >> 8) | ((num & 0x0000ff00) << 8) | (num << 24);
+}
+
+/* jsondoc
+{
+"name": "copyIndexLen",
+"args": [
+{"name": "number", "vtype": "array", "text": "src"},
+{"name": "number", "vtype": "int", "text": "src index"},
+{"name": "number", "vtype": "array", "text": "dst"},
+{"name": "number", "vtype": "int", "text": "dst index"},
+{"name": "number", "vtype": "int", "text": "len"}
+    ],
+"return": "",
+"text": "copy len bytes from src at src index to dst at dst index",
+"example": "
+"
+}
+*/
+function copyIndexLen(src, sidx, dst, didx, len) {
+    for (var i = 0; i < len; i++) {
+        dst[didx+i] = src[sidx+i];
+    }
 }

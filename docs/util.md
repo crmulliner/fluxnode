@@ -6,10 +6,11 @@ A simple utility library.
 
 - [arrayEqual](#arrayequalab)
 - [binToHex](#bintohexbin)
+- [copyIndexLen](#copyindexlennumbernumbernumbernumbernumber)
 - [crc16](#crc16buf)
 - [fromTwosComplement](#fromtwoscomplementtwoscomplementnumberbytes)
 - [hexToBin](#hextobinhex)
-- [htons](#htonsnumber)
+- [hton[s|l]](#hton[s|l]number)
 - [reverse](#reversebin)
 
 ---
@@ -47,6 +48,46 @@ convert a plain buffer to a hex string
   binary buffer
 
 **Returns:** string
+
+```
+
+```
+
+## copyIndexLen(number,number,number,number,number)
+
+copy len bytes from src at src index to dst at dst index
+
+- number
+
+  type: array
+
+  src
+
+- number
+
+  type: int
+
+  src index
+
+- number
+
+  type: array
+
+  dst
+
+- number
+
+  type: int
+
+  dst index
+
+- number
+
+  type: int
+
+  len
+
+**Returns:** 
 
 ```
 
@@ -106,17 +147,17 @@ convert hex string to a plain buffer
 
 ```
 
-## htons(number)
+## hton[s|l](number)
 
-convert host to network byte order short (uint16)
+convert host to network byte order (uint16/32)
 
 - number
 
-  type: uint16
+  type: uint16/32
 
-  uint16
+  uint16/32
 
-**Returns:** uint16
+**Returns:** uint16/32
 
 ```
 

@@ -23,7 +23,7 @@ Unsupported:
 - [LoraWanPacket](#lorawanpacketdevaddrnwkkeyappkey)
 - [LoraWanPacket.ackPacket](#lorawanpacket.ackpacketfportfcnt)
 - [LoraWanPacket.confirmedUp](#lorawanpacket.confirmeduppayloadfportfcnt)
-- [LoraWanPacket.makePacketFromPayLoad](#lorawanpacket.makepacketfrompayloadpayloadpkttypefportfcntlfcntdir)
+- [LoraWanPacket.makePacketFromPayLoad](#lorawanpacket.makepacketfrompayloadpayloadpkttypefportfcrtlfcntdir)
 - [LoraWanPacket.parseDownPacket](#lorawanpacket.parsedownpacketpacket)
 - [LoraWanPacket.unConfirmedUp](#lorawanpacket.unconfirmeduppayloadfportfcnt)
 - [loraWanBeaconDecode](#lorawanbeacondecodepktregion)
@@ -143,7 +143,7 @@ pkt = lwp.confirmedUp(payload, fport, fcnt);
 
 ```
 
-## LoraWanPacket.makePacketFromPayLoad(payload,pkttype,fport,fcntl,fcnt,dir)
+## LoraWanPacket.makePacketFromPayLoad(payload,pkttype,fport,fcrtl,fcnt,dir)
 
 Create a LoraWan packet.
 
@@ -165,11 +165,11 @@ Create a LoraWan packet.
 
   fport
 
-- fcntl
+- fcrtl
 
   type: plain buffer
 
-  fcntl
+  fcrtl
 
 - fcnt
 

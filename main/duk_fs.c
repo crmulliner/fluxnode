@@ -152,7 +152,7 @@ static duk_ret_t js_fs_write(duk_context *ctx)
 {"name": "path", "vtype": "string", "text": "file path"},
 {"name": "flags", "vtype": "string", "text": "flags ('r', 'w', 'a', ...)"}
 ],
-"return": "file descriptor",
+"return": "file descriptor (or -1 for error)",
 "text": "Open file.",
 "example": "
 "

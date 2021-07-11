@@ -98,7 +98,7 @@ Open file.
 
   flags ('r', 'w', 'a', ...)
 
-**Returns:** file descriptor
+**Returns:** file descriptor (or -1 for error)
 
 ```
 
