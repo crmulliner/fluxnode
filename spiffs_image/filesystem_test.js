@@ -25,6 +25,10 @@ function OnStart() {
     seektest();
 
     FileSystem.unlink("fs_test.json");
+    var fp = FileSystem.open("fs_test.json", "r");
+    if (fp != -1) {
+        print("open should return -1\n");
+    }
 
     dir = FileSystem.listDir();
     print(JSON.stringify(dir));

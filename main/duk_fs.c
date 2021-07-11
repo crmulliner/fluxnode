@@ -172,7 +172,8 @@ static duk_ret_t js_fs_open(duk_context *ctx)
 #ifdef FS_DEBUG_1
         printf("js_fs_open: Unable to get path\n");
 #endif
-        return DUK_RET_ERROR;
+        duk_push_int(ctx, -1);
+        return 1;
     }
 
     // Get the flags
@@ -183,7 +184,8 @@ static duk_ret_t js_fs_open(duk_context *ctx)
 #ifdef FS_DEBUG_1
         printf("js_fs_open: Unable to get flags\n");
 #endif
-        return DUK_RET_ERROR;
+        duk_push_int(ctx, -1);
+        return 1;
     }
 #ifdef FS_DEBUG_1
     printf(" - Path to open is '%s' and flags are '%s'\n", path, flags);
@@ -191,13 +193,6 @@ static duk_ret_t js_fs_open(duk_context *ctx)
     int posixOpenFlags = stringToPosixFlags(flags);
 
     int fd = open(path, posixOpenFlags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
-    if (fd < 0)
-    {
-#ifdef FS_DEBUG_1
-        printf("<< js_fs_open: Error: open(%s, 0x%x): %d errno=%d [%s]\n", path, posixOpenFlags, fd, errno, strerror(errno));
-#endif
-        return DUK_RET_ERROR;
-    }
     // Return the open file descriptor
     duk_push_int(ctx, fd);
 
@@ -248,7 +243,7 @@ static duk_ret_t js_fs_fstat(duk_context *ctx)
 #ifdef FS_DEBUG_1
         printf("Error from stat of fd %d: %d %s\n", fd, errno, strerror(errno));
 #endif
-        return 0;
+        statBuf.st_size = 0;
     }
     duk_push_object(ctx);
     duk_push_int(ctx, statBuf.st_size);
@@ -319,7 +314,7 @@ static duk_ret_t js_fs_stat(duk_context *ctx)
 #ifdef FS_DEBUG_1
         printf("js_fs_stat: Error from stat of file %s: %d %s\n", path, errno, strerror(errno));
 #endif
-        return DUK_RET_ERROR;
+        statBuf.st_size = 0;
     }
     duk_push_object(ctx);
     duk_push_int(ctx, statBuf.st_size);
