@@ -180,12 +180,12 @@ function reverse(input) {
 
 /* jsondoc
 {
-"name": "hton[s|l]",
+"name": "htons",
 "args": [
-{"name": "number", "vtype": "uint16/32", "text": "uint16/32"}
+{"name": "number", "vtype": "uint16", "text": "uint16"}
     ],
-"return": "uint16/32",
-"text": "convert host to network byte order (uint16/32)",
+"return": "uint16",
+"text": "convert host to network byte order (uint16)",
 "example": "
 "
 }
@@ -194,6 +194,18 @@ function htons(num) {
     return (num >> 8) | ((num & 0xff) << 8);
 }
 
+/* jsondoc
+{
+"name": "htonl",
+"args": [
+{"name": "number", "vtype": "uint32", "text": "uint32"}
+    ],
+"return": "uint32",
+"text": "convert host to network byte order (uint32)",
+"example": "
+"
+}
+*/
 function htonl(num) {
     print("htonl\n");
     return (num >> 24) | ((num & 0x00ff0000) >> 8) | ((num & 0x0000ff00) << 8) | (num << 24);

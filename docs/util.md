@@ -10,7 +10,8 @@ A simple utility library.
 - [crc16](#crc16buf)
 - [fromTwosComplement](#fromtwoscomplementtwoscomplementnumberbytes)
 - [hexToBin](#hextobinhex)
-- [hton[s|l]](#hton[s|l]number)
+- [htonl](#htonlnumber)
+- [htons](#htonsnumber)
 - [reverse](#reversebin)
 
 ---
@@ -147,17 +148,33 @@ convert hex string to a plain buffer
 
 ```
 
-## hton[s|l](number)
+## htonl(number)
 
-convert host to network byte order (uint16/32)
+convert host to network byte order (uint32)
 
 - number
 
-  type: uint16/32
+  type: uint32
 
-  uint16/32
+  uint32
 
-**Returns:** uint16/32
+**Returns:** uint32
+
+```
+
+```
+
+## htons(number)
+
+convert host to network byte order (uint16)
+
+- number
+
+  type: uint16
+
+  uint16
+
+**Returns:** uint16
 
 ```
 
