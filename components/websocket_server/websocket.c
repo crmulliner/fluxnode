@@ -181,14 +181,18 @@ static int websocket_serve(struct netconn *conn, websocket_server_config_t *cfg)
     {
         int res = netconn_recv(conn, &inbuf);
 
-        if (res != ERR_OK && websocket_server_running)
+        if (res == ERR_TIMEOUT && websocket_server_running)
         {
-            cfg->log_printf("%s: recv timeout (disconnecting)\n", __func__);
-            break;
+#ifdef WS_DEBUG
+            cfg->log_printf("%s: recv timeout\n", __func__);
+#endif
+            continue;
         }
 
-        if (websocket_server_running == 0)
-        {
+        if (res != ERR_OK || websocket_server_running == 0) {
+#ifdef WS_DEBUG
+            cfg->log_printf("%s: recv error (disconnecting)\n", __func__);
+#endif
             break;
         }
 
@@ -306,9 +310,8 @@ static void websocket_server_task(void *p)
     server_conn = netconn_new(NETCONN_TCP);
     if (server_conn == NULL)
     {
-#ifdef WS_DEBUG
-        cfg->log_printf("%s: netconn_new failed\n", __func__);
-#endif
+        cfg->log_printf("%s: netconn_new failed FATAL\n", __func__);
+        return;
     }
     netconn_bind(server_conn, NULL, cfg->port);
     netconn_listen(server_conn);

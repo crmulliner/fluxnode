@@ -25,6 +25,7 @@
 #include "ble_server.h"
 #include "board.h"
 #include "log.h"
+#include "version.h"
 
 extern time_t boottime;
 
@@ -118,7 +119,9 @@ function OnEvent(event) {
 
 ## Member Variables
 - BoardName (name of the board)
+- Version (fluxnode software version)
 - ButtonNum (number of buttons: 0-1)
+- ButtonPressedDuringBoot (was button pressed during boot: 0 = no, 1 = yes)
 - LEDNum (number of LEDs: 0-2)
 - FlashSize (size of flash chip in bytes)
 
@@ -150,6 +153,7 @@ typedef enum CONNECTIVITY_T
 static enum CONNECTIVITY_T connectivity;
 static websocket_server_config_t *ws_server_cfg;
 static board_config_t *board;
+static uint8_t button_pressed_during_boot;
 
 /* jsondoc
 {
@@ -1108,9 +1112,11 @@ void platform_register(duk_context *ctx)
     duk_push_object(ctx);
 
     ADD_STRING("BoardName", board->boardname);
+    ADD_STRING("Version", FLUXNODE_VERSION);
     ADD_NUMBER("ButtonNum", board->button_gpio != -1 ? 1 : 0);
     ADD_NUMBER("LEDNum", board->led1_gpio != -1 ? 2 : 1);
     ADD_NUMBER("FlashSize", spi_flash_get_chip_size());
+    ADD_NUMBER("ButtonPressedDuringBoot", button_pressed_during_boot);
 
     // will configure and reset LEDs (e.g. if on or blinking before)
     led_service_init(board->led0_gpio, board->led1_gpio);
@@ -1122,6 +1128,9 @@ void platform_register(duk_context *ctx)
 
 void platform_init()
 {
+    // can be used for factory reset
+    button_pressed_during_boot = button_service_ispressed();
+
     connectivity = NOT_CONNECTED;
     board = get_board_config();
 }

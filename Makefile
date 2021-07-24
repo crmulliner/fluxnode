@@ -1,5 +1,8 @@
 .PHONY: build
 build:
+	cat main/include/version |tr -d '\n' >main/include/version.h
+	git rev-parse --short HEAD |tr -d '\n' >>main/include/version.h
+	echo '"' >>main/include/version.h
 	idf.py build
 
 .PHONY: monitor

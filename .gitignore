@@ -1,3 +1,4 @@
+main/include/version.h
 build/***
 test/*_test
 sdkconfig.old

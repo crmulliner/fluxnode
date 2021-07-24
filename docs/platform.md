@@ -84,7 +84,9 @@ function OnEvent(event) {
 
 ## Member Variables
 - BoardName (name of the board)
+- Version (fluxnode software version)
 - ButtonNum (number of buttons: 0-1)
+- ButtonPressedDuringBoot (was button pressed during boot: 0 = no, 1 = yes)
 - LEDNum (number of LEDs: 0-2)
 - FlashSize (size of flash chip in bytes)
 
