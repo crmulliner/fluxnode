@@ -15,7 +15,11 @@ function startWifi(ssid, pass) {
 
     print("Connecting to Wifi Network: '" + ssid + "'\n");
     Platform.setConnectivity(1);
-    Platform.wifiConfigure(ssid, pass, 1, 0);
+    if (!Platform.wifiConfigure(ssid, pass, 1, 0)) {
+        print("falling back to AP mode...\n");
+        wifiAP();
+        return;
+    }
     print("FluxN0de IP: " + Platform.getLocalIP() + "\n");
 }
 
