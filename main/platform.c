@@ -26,6 +26,9 @@
 #include "board.h"
 #include "log.h"
 #include "version.h"
+#include "udp_service.h"
+
+#define UDP_EVENT_SERVICE 1
 
 extern time_t boottime;
 
@@ -467,6 +470,9 @@ static int wifi_connectivity_stop()
 {
     websocket_stop();
     webserver_stop();
+#ifdef UDP_EVENT_SERVICE
+    udp_server_stop();
+#endif
     if (ws_server_cfg != NULL)
     {
         free(ws_server_cfg);
@@ -738,6 +744,25 @@ static int queue_cb(websocket_frame_t *frame, const void *data)
     return 0;
 }
 
+#ifdef UDP_EVENT_SERVICE
+static int queue_udp_cb(const uint8_t *buf, const size_t len)
+{
+    if (len < 2)
+    {
+        return 0;
+    }
+
+    uint8_t *data = malloc(len - 1);
+    memcpy(data, buf + 1, len - 1);
+
+    // first byte in UDP packet selects the event
+    uint8_t msg_type = buf[0] - 'A';
+
+    duk_main_add_full_event(msg_type, INCOMING, (uint8_t *)data, len - 1, 0, 0, time(NULL));
+    return 0;
+}
+#endif
+
 /* jsondoc
 {
 "name": "wifiConfigure",
@@ -796,6 +821,10 @@ static int wifi_configure(duk_context *ctx)
 
     websocket_start(ws_server_cfg);
     webserver_start(webmode);
+
+#ifdef UDP_EVENT_SERVICE
+    udp_server_start(5000, queue_udp_cb);
+#endif
 
     duk_push_boolean(ctx, 1);
     return 1;

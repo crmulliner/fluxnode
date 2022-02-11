@@ -147,13 +147,15 @@ static int send_event(duk_context *ctx, event_msg_ptr_t event)
     return result;
 }
 
+#define MAX_DELAY (100 * 60 * 60 * 24) // 24h
+
 static int timer_set_check()
 {
     g->last_ticks = xTaskGetTickCount();
     unsigned long int delay = g->wake_up_timeMS / MS_PER_TICK;
-    delay = delay * 0.9;                                               // wake up after 90% of the delay time has passed
+    delay = delay * 0.99;                                              // wake up after 99% of the delay time has passed
     delay = delay == 0 ? 1 : delay;                                    // minimal delay of 1 tick
-    delay = delay > (100 * 60 * 60 * 24) ? 100 * 60 * 60 * 24 : delay; // maximal delay of ticks equiv to 24h
+    delay = delay > MAX_DELAY ? MAX_DELAY : delay;
     g->delay = delay;
 #ifdef TIMER_DEBUG
     logprintf("%s: delay: %d\n", __func__, g->delay);
@@ -180,6 +182,9 @@ static int timer_check()
 
     unsigned long int cur = xTaskGetTickCount();
     unsigned long int ticks_passed = cur - g->last_ticks;
+#ifdef TIMER_DEBUG
+    logprintf("ticks passed %ld\n",  ticks_passed);
+#endif
     if (ticks_passed == 0)
     {
 #ifdef TIMER_DEBUG

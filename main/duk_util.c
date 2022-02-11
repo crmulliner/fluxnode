@@ -9,7 +9,7 @@
 #include "duk_helpers.h"
 #include "log.h"
 
-//#define DUK_UTIL_DEBUG 1
+#define DUK_UTIL_DEBUG 1
 
 static duk_ret_t native_print(duk_context *ctx)
 {

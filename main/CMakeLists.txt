@@ -15,6 +15,7 @@ idf_component_register(SRCS
     "record.c"
     "duk_crypto.c"
     "board.c"
+    "udp_service.c"
     INCLUDE_DIRS 
         "include"
         "."

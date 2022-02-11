@@ -15,6 +15,8 @@
 #include "util.h"
 #include "board.h"
 
+//#define UTIL_DEBUG_1 1
+
 #define BATTERY_VOLT_MIN 3300.0
 #define BATTERY_VOLT_MAX 4200.0
 #define BATTERY_MEASURE_NUM 10
