@@ -454,6 +454,7 @@ function loraWanUpDownChannel915(channel) {
 }
 
 var __gpsEpoch = 315964800;
+var __gpsEpochOffset = 18;
 
 /* jsondoc
 {
@@ -466,6 +467,9 @@ var __gpsEpoch = 315964800;
 "longtext": "
 Decode a LoRaWAN Class B beacon.
 
+The beacon time uses GPS time and is 17 seconds ahead of UTC.
+See: https://www.usno.navy.mil/USNO/time/master-clock/leap-seconds
+
 The beacon object contains the following members:
 ```
 {
@@ -473,6 +477,7 @@ The beacon object contains the following members:
     msg: string, // if error == true
     region: int,
     time: uint, // UTC
+    time_stamp: uint, // time stamp from beacon
     time_crc: boolean,
     info: uint8,
     info_crc: boolean,
@@ -565,7 +570,8 @@ function loraWanBeaconDecode(pkt, region) {
     return {
         error: false,
         region: region,
-        time: __gpsEpoch + tm,
+        time: __gpsEpoch + tm - __gpsEpochOffset,
+        time_stamp: __gpsEpoch + tm,
         time_crc: time_crc,
         info: _infoDesc[0],
         info_crc: info_crc,
@@ -640,9 +646,8 @@ print(nextBeaconChannel.channel);
 }
 */
 function loraWanBeaconGetNextChannel() {
-    var leapseconds = 18;
     var n = Math.floor(new Date().getTime() / 1000);
-    var rel = n - __gpsEpoch + leapseconds;
+    var rel = n - __gpsEpoch + __gpsEpochOffset;
     var channelDiff = 128 - Math.floor(rel % 128);
     var channel = 1 + Math.floor(rel % (128 * 8) / 128);
     return {
