@@ -17,12 +17,11 @@ Supported features:
 - send confirmed / un-confirmed message
 - receive confirmed / un-confirmed message
 - encode/decode ACK message
+- decoding MAC commands (FOpts)
+- send FOpts
 
 Unsupported:
 - Activation Method: OTAA
-- Sending FOpts
-- Decoding received FOpts
-
 "
 }
 */
@@ -40,7 +39,7 @@ Create a LoraWanPacket instance using device address, network key, and applicati
 All packet operations will use the address and keys to encode and decode packets.
 
 Configure the frame counter length by setting member variable fcntLen to 2 for 16bit and 4 fore 32bit.
-The default is 16bit.
+The default is 16bit. The length is not used by the library, the user has to manage the fcnt.
 
 The instance will contain the following members:
 ```
@@ -71,18 +70,111 @@ function LoraWanPacket(devAddr, nwkKey, appKey) {
         devAddr: reverse(devAddr),
         nwkKey: nwkKey,
         appKey: appKey,
-        fcntLen: 2, // frame counter length: 2 = 16bit, 4 = 32bit
+        fcntLen: 2,
         makePacketFromPayLoad: __makePacketFromPayLoad,
         unConfirmedUp: __unConfirmedUp,
         confirmedUp: __confirmedUp,
         ackPacket: __makeAck,
         parseDownPacket: __parseDownPacket,
         unConfirmedDown: __unConfirmedDown,
+        confirmedDown: __confirmedDown,
+        foptsDecode: __foptsDecode,
     }
 }
 
-function __unConfirmedDown(payload, fport, fcnt) {
-    return this.makePacketFromPayLoad(payload, 0x60, fport, 0, fcnt, 1);
+/* jsondoc
+{
+"name": "LoraWanPacket.foptsDecode",
+"args": [
+{"name": "data", "vtype": "plain buffer", "text": "fopts"}
+    ],
+"return": "array of MAC commands",
+"text": "parse FOpts to get MAC commands (not all commands are fully decoded)",
+"example": "
+var mac = lwp.foptsDecode(pkt.fopts);
+// print MAC command name
+print(mac[0].cmd + '\n');
+"
+}
+*/
+function __foptsDecode(data) {
+    var MACcmds = [];
+    var idx = 0;
+    var fl = data.length;
+    var error = false;
+
+    while (fl > 0) {
+        var cid = data[idx];
+        //LinkCheckReq
+        if (cid == 0x02) {
+            idx++;
+            fl--;
+            MACcmds.push({cmd: "link_check_req"});
+        }
+        // LinkADRReq
+        else if (cid == 0x3) {
+            idx++;
+            var cmd = new Uint8Array(4);
+            cmd.set(data.subarray(idx, idx+4), 0);
+            var DR = (cmd[0] & 0xF0) >> 4;
+            var TX = cmd[0] & 0x0F;
+            var nbrep = cmd[3] & 0x0F;
+            var maskctl = cmd[3] >> 4;
+            var chans = (cmd[1] << 8) | cmd[2];
+            /*
+            for (var i = 0; i < 16; i++) {
+                var c = chans & 0x01;
+                print("Channel " + (maskctl + i) + " " + c + "\n");
+                chans = chans >> 1;
+            }
+            */
+            idx += 4;
+            fl -= 5;
+            MACcmds.push({cmd: "link_adr_req", dr: DR, tx: TX, chmask: chans, maskctl: maskctl, nbrep: nbrep});
+        }
+        // DutyCycleReq, FIXME
+        else if (cid == 0x4) {
+            idx += 2;
+            fl -= 2;
+            MACcmds.push({cmd: "duty_cycle_req"});
+        }
+        // RXParamSetupReq, FIXME
+        else if (cid == 0x5) {
+            idx += 5;
+            fl -= 5;
+            MACcmds.push({cmd: "rx_param_setup_req"});
+        }
+        // DevStatusReq
+        else if (cid == 0x6) {
+            idx++;
+            fl--;
+            MACcmds.push({cmd: "dev_status_req"});
+        }
+        // NewChannelReq, FIXME
+        else if (cid == 0x7) {
+            idx += 6;
+            fl -= 6;
+            MACcmds.push({cmd: "new_channel_req"});
+        }
+        // RXTimingSetupReq
+        else if (cid == 0x8) {
+            var cmd = new Uint8Array(1);
+            idx++;
+            cmd.set(data.subarray(idx, idx+1), 0);
+            var delay = cmd[0] & 0x0F;
+            if (delay == 0) { delay = 1; }
+            fl -= 2;
+            MACcmds.push({cmd: "rx_timing_setup_req", delay: delay});
+        }
+        else {
+            error = true;
+            break
+        }
+    }
+    return {
+        error: error,
+        MAC: MACcmds,
+    }
 }
 
 /* jsondoc
@@ -103,7 +195,7 @@ The decoded object packet contains the following elements:
     payload: plainBuffer,
     fport: int,
     fcnt: int,
-    fops: plainBuffer,
+    fopts: plainBuffer,
     ack: boolean,
     fpending: boolean,
     adr: boolean,
@@ -143,14 +235,13 @@ function __parseDownPacket(pkt) {
     fcntbytes.setUint8(1, pkt[7]);
     var FCNT = 0;
     FCNT = fcntbytes.getUint16(0, true);
-    var FOPSLEN = FCTRL & 0x0f;
-    //print(FOPSLEN);
-    var FOPS = new Uint8Array(FOPSLEN);
+    var FOPTSLEN = FCTRL & 0x0F;
+    var FOPTS = new Uint8Array(FOPTSLEN);
     var data_idx = 8;
 
-    if (FOPSLEN > 0 && FOPSLEN + 12 <= pkt.length) {
-        FOPS.set(pkt.subarray(data_idx, data_idx + FOPSLEN), 0);
-        data_idx += FOPSLEN;
+    if (FOPTSLEN > 0 && FOPTSLEN + 12 <= pkt.length) {
+        FOPTS.set(pkt.subarray(data_idx, data_idx + FOPTSLEN), 0);
+        data_idx += FOPTSLEN;
     }
     var micOk = __checkMic(pkt, this.nwkKey, FCNT, addr, 1);
     var payload = new Uint8Array(0);
@@ -170,7 +261,7 @@ function __parseDownPacket(pkt) {
         payload: payload,
         fport: FPORT,
         fcnt: FCNT,
-        fops: FOPS,
+        fopts: FOPTS,
         ack: (FCTRL & 0x20) != 0,
         fpending: (FCTRL & 0x10) != 0,
         adr: (FCTRL & 0x80) != 0,
@@ -181,26 +272,75 @@ function __parseDownPacket(pkt) {
 
 /* jsondoc
 {
-"name": "LoraWanPacket.unConfirmedUp",
+"name": "LoraWanPacket.unConfirmedDown",
 "args": [
 {"name": "payload", "vtype": "plain buffer", "text": "payload"},
 {"name": "fport", "vtype": "uint", "text": "fport"},
-{"name": "fcnt", "vtype": "uint", "text": "frame counter"}
+{"name": "fcnt", "vtype": "uint", "text": "frame counter"},
+{"name": "fopts", "vtype": "plain buffer", "text": "fopts"}
     ],
 "return": "loraWan packet as a plain buffer",
-"text": "Create a UnConfirmedUp packet.",
+"text": "Create a UnConfirmedDown packet.",
 "example": "
-// make un-confirmed Up
 var enc = new TextEncoder();
 var payload = enc.encode('hi');
 var vport = 1;
 var fcnt = 1;
-pkt = lwp.unConfirmedUp(payload, fport, fcnt);
+pkt = lwp.unConfirmedDown(payload, fport, fcnt, []);
 "
 }
 */
-function __unConfirmedUp(payload, fport, fcnt) {
-    return this.makePacketFromPayLoad(payload, 0x40, fport, 0, fcnt, 0);
+function __unConfirmedDown(payload, fport, fcnt, fopts) {
+    return this.makePacketFromPayLoad(payload, 0x60, fport, 0, fcnt, fopts, 1);
+}
+
+/* jsondoc
+{
+"name": "LoraWanPacket.confirmedDown",
+"args": [
+{"name": "payload", "vtype": "plain buffer", "text": "payload"},
+{"name": "fport", "vtype": "uint", "text": "fport"},
+{"name": "fcnt", "vtype": "uint", "text": "frame counter"},
+{"name": "fopts", "vtype": "plain buffer", "text": "fopts"}
+    ],
+"return": "loraWan packet as a plain buffer",
+"text": "Create a ConfirmedDown packet.",
+"example": "
+var enc = new TextEncoder();
+var payload = enc.encode('hi');
+var vport = 1;
+var fcnt = 1;
+pkt = lwp.confirmedDown(payload, fport, fcnt, []);
+"
+}
+*/
+function __confirmedDown(payload, fport, fcnt, fopts) {
+    return this.makePacketFromPayLoad(payload, 0xA0, fport, 0, fcnt, fopts, 1);
+}
+
+
+/* jsondoc
+{
+"name": "LoraWanPacket.unConfirmedUp",
+"args": [
+{"name": "payload", "vtype": "plain buffer", "text": "payload"},
+{"name": "fport", "vtype": "uint", "text": "fport"},
+{"name": "fcnt", "vtype": "uint", "text": "frame counter"},
+{"name": "fopts", "vtype": "plain buffer", "text": "fopts"}
+    ],
+"return": "loraWan packet as a plain buffer",
+"text": "Create a UnConfirmedUp packet.",
+"example": "
+var enc = new TextEncoder();
+var payload = enc.encode('hi');
+var vport = 1;
+var fcnt = 1;
+pkt = lwp.unConfirmedUp(payload, fport, fcnt, []);
+"
+}
+*/
+function __unConfirmedUp(payload, fport, fcnt, fopts) {
+    return this.makePacketFromPayLoad(payload, 0x40, fport, 0, fcnt, fopts, 0);
 }
 
 /* jsondoc
@@ -209,22 +349,22 @@ function __unConfirmedUp(payload, fport, fcnt) {
 "args": [
 {"name": "payload", "vtype": "plain buffer", "text": "payload"},
 {"name": "fport", "vtype": "uint", "text": "fport"},
-{"name": "fcnt", "vtype": "uint", "text": "frame counter"}
+{"name": "fcnt", "vtype": "uint", "text": "frame counter"},
+{"name": "fopts", "vtype": "plain buffer", "text": "fopts"}
     ],
 "return": "loraWan packet as a plain buffer",
 "text": "Create a ConfirmedUp packet.",
 "example": "
-// make confirmed Up
 var enc = new TextEncoder();
 var payload = enc.encode('hi');
 var vport = 1;
 var fcnt = 1;
-pkt = lwp.confirmedUp(payload, fport, fcnt);
+pkt = lwp.confirmedUp(payload, fport, fcnt, []);
 "
 }
 */
-function __confirmedUp(payload, fport, fcnt) {
-    return this.makePacketFromPayLoad(payload, 0x80, fport, 0, fcnt, 0);
+function __confirmedUp(payload, fport, fcnt, fopts) {
+    return this.makePacketFromPayLoad(payload, 0x80, fport, 0, fcnt, fopts, 0);
 }
 
 /* jsondoc
@@ -242,7 +382,7 @@ pkt = lwp.ackPacket(1, 1);
 }
 */
 function __makeAck(fport, fcnt) {
-    return this.makePacketFromPayLoad(new Uint8Array(0), 0x40, fport, 0x20, fcnt, 0);
+    return this.makePacketFromPayLoad(new Uint8Array(0), 0x40, fport, 0x20, fcnt, "", 0);
 }
 
 /* jsondoc
@@ -254,27 +394,26 @@ function __makeAck(fport, fcnt) {
 {"name": "fport", "vtype": "uint", "text": "fport"},
 {"name": "fcrtl", "vtype": "plain buffer", "text": "fcrtl"},
 {"name": "fcnt", "vtype": "uint16", "text": "frame counter"},
+{"name": "fopts", "vtype": "plain buffer", "text": "fopts"},
 {"name": "dir", "vtype": "int", "text": "direction 0 = up, 1 = down"}
     ],
 "return": "loraWan packet as a plain buffer",
 "text": "Create a LoraWan packet.",
 "example": "
-// make un-confirmed Up
 var enc = new TextEncoder();
 var payload = enc.encode('hi');
 var vport = 1;
 var fcnt = 1;
-pkt = lwp.makePacketFromPayLoad(payload, 0x40, fport, 0, fcnt, 0);
+// make un-confirmed Up
+pkt = lwp.makePacketFromPayLoad(payload, 0x40, fport, 0, fcnt, [], 0);
 "
 }
 */
-// no support for Fopts
-function __makePacketFromPayLoad(payload, pkttype, fport, fctrl, fcnt, dir) {
+function __makePacketFromPayLoad(payload, pkttype, fport, fctrl, fcnt, fopts, dir) {
     var MHDR = new Uint8Array(1);
     MHDR[0] = pkttype;
-    var FHDR = __makeFhdrNoFopts(this.devAddr, fctrl, fcnt);
+    var FHDR = __makeFhdr(this.devAddr, fctrl, fcnt, fopts);
     var FPORT = __makeFport(fport);
-
     var pkt = new Uint8Array(MHDR.length + FHDR.length + FPORT.length + payload.length);
     pkt.set(MHDR, 0);
     pkt.set(FHDR, 1);
@@ -319,15 +458,17 @@ function __makeFport(port) {
     return fport;
 }
 
-// Fopts not supported
-function __makeFhdrNoFopts(addr, fctrl, fcnt) {
+function __makeFhdr(addr, fctrl, fcnt, fopts) {
     // ADDR (4) FCTRL (1) FCnt (2) Fopts (0-15)
-    var FHDR = new Uint8Array(7);
+    var FHDR = new Uint8Array(7 + fopts.length);
     FHDR.set(addr, 0);
-    FHDR[4] = fctrl;
+    FHDR[4] = fctrl | (fopts.length & 0x0F);
     var tmp = new ArrayBuffer(2);
     new DataView(tmp).setUint16(0, fcnt, true);
     FHDR.set(tmp, 5);
+    if (fopts.length > 0) {
+        FHDR.set(fopts, 7);
+    }
     return FHDR;
 }
 

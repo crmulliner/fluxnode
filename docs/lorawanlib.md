@@ -11,21 +11,23 @@ Supported features:
 - send confirmed / un-confirmed message
 - receive confirmed / un-confirmed message
 - encode/decode ACK message
+- decoding MAC commands (FOpts)
+- send FOpts
 
 Unsupported:
 - Activation Method: OTAA
-- Sending FOpts
-- Decoding received FOpts
-
 
 ## Methods
 
 - [LoraWanPacket](#lorawanpacketdevaddrnwkkeyappkey)
 - [LoraWanPacket.ackPacket](#lorawanpacket.ackpacketfportfcnt)
-- [LoraWanPacket.confirmedUp](#lorawanpacket.confirmeduppayloadfportfcnt)
-- [LoraWanPacket.makePacketFromPayLoad](#lorawanpacket.makepacketfrompayloadpayloadpkttypefportfcrtlfcntdir)
+- [LoraWanPacket.confirmedDown](#lorawanpacket.confirmeddownpayloadfportfcntfopts)
+- [LoraWanPacket.confirmedUp](#lorawanpacket.confirmeduppayloadfportfcntfopts)
+- [LoraWanPacket.foptsDecode](#lorawanpacket.foptsdecodedata)
+- [LoraWanPacket.makePacketFromPayLoad](#lorawanpacket.makepacketfrompayloadpayloadpkttypefportfcrtlfcntfoptsdir)
 - [LoraWanPacket.parseDownPacket](#lorawanpacket.parsedownpacketpacket)
-- [LoraWanPacket.unConfirmedUp](#lorawanpacket.unconfirmeduppayloadfportfcnt)
+- [LoraWanPacket.unConfirmedDown](#lorawanpacket.unconfirmeddownpayloadfportfcntfopts)
+- [LoraWanPacket.unConfirmedUp](#lorawanpacket.unconfirmeduppayloadfportfcntfopts)
 - [loraWanBeaconDecode](#lorawanbeacondecodepktregion)
 - [loraWanBeaconGetNextChannel](#lorawanbeacongetnextchannel)
 - [loraWanBeaconListen](#lorawanbeaconlistenchannelregion)
@@ -40,7 +42,7 @@ Create a LoraWanPacket instance using device address, network key, and applicati
 All packet operations will use the address and keys to encode and decode packets.
 
 Configure the frame counter length by setting member variable fcntLen to 2 for 16bit and 4 fore 32bit.
-The default is 16bit.
+The default is 16bit. The length is not used by the library, the user has to manage the fcnt.
 
 The instance will contain the following members:
 ```
@@ -109,7 +111,46 @@ pkt = lwp.ackPacket(1, 1);
 
 ```
 
-## LoraWanPacket.confirmedUp(payload,fport,fcnt)
+## LoraWanPacket.confirmedDown(payload,fport,fcnt,fopts)
+
+Create a ConfirmedDown packet.
+
+- payload
+
+  type: plain buffer
+
+  payload
+
+- fport
+
+  type: uint
+
+  fport
+
+- fcnt
+
+  type: uint
+
+  frame counter
+
+- fopts
+
+  type: plain buffer
+
+  fopts
+
+**Returns:** loraWan packet as a plain buffer
+
+```
+var enc = new TextEncoder();
+var payload = enc.encode('hi');
+var vport = 1;
+var fcnt = 1;
+pkt = lwp.confirmedDown(payload, fport, fcnt, []);
+
+```
+
+## LoraWanPacket.confirmedUp(payload,fport,fcnt,fopts)
 
 Create a ConfirmedUp packet.
 
@@ -131,19 +172,44 @@ Create a ConfirmedUp packet.
 
   frame counter
 
+- fopts
+
+  type: plain buffer
+
+  fopts
+
 **Returns:** loraWan packet as a plain buffer
 
 ```
-// make confirmed Up
 var enc = new TextEncoder();
 var payload = enc.encode('hi');
 var vport = 1;
 var fcnt = 1;
-pkt = lwp.confirmedUp(payload, fport, fcnt);
+pkt = lwp.confirmedUp(payload, fport, fcnt, []);
 
 ```
 
-## LoraWanPacket.makePacketFromPayLoad(payload,pkttype,fport,fcrtl,fcnt,dir)
+## LoraWanPacket.foptsDecode(data)
+
+parse FOpts to get MAC commands (not all commands are fully decoded)
+
+- data
+
+  type: plain buffer
+
+  fopts
+
+**Returns:** array of MAC commands
+
+```
+var mac = lwp.foptsDecode(pkt.fopts);
+// print MAC command name
+print(mac[0].cmd + '
+');
+
+```
+
+## LoraWanPacket.makePacketFromPayLoad(payload,pkttype,fport,fcrtl,fcnt,fopts,dir)
 
 Create a LoraWan packet.
 
@@ -177,6 +243,12 @@ Create a LoraWan packet.
 
   frame counter
 
+- fopts
+
+  type: plain buffer
+
+  fopts
+
 - dir
 
   type: int
@@ -186,12 +258,12 @@ Create a LoraWan packet.
 **Returns:** loraWan packet as a plain buffer
 
 ```
-// make un-confirmed Up
 var enc = new TextEncoder();
 var payload = enc.encode('hi');
 var vport = 1;
 var fcnt = 1;
-pkt = lwp.makePacketFromPayLoad(payload, 0x40, fport, 0, fcnt, 0);
+// make un-confirmed Up
+pkt = lwp.makePacketFromPayLoad(payload, 0x40, fport, 0, fcnt, [], 0);
 
 ```
 
@@ -208,7 +280,7 @@ The decoded object packet contains the following elements:
     payload: plainBuffer,
     fport: int,
     fcnt: int,
-    fops: plainBuffer,
+    fopts: plainBuffer,
     ack: boolean,
     fpending: boolean,
     adr: boolean,
@@ -234,7 +306,46 @@ if (!decodedPkt.micVerified) {
 
 ```
 
-## LoraWanPacket.unConfirmedUp(payload,fport,fcnt)
+## LoraWanPacket.unConfirmedDown(payload,fport,fcnt,fopts)
+
+Create a UnConfirmedDown packet.
+
+- payload
+
+  type: plain buffer
+
+  payload
+
+- fport
+
+  type: uint
+
+  fport
+
+- fcnt
+
+  type: uint
+
+  frame counter
+
+- fopts
+
+  type: plain buffer
+
+  fopts
+
+**Returns:** loraWan packet as a plain buffer
+
+```
+var enc = new TextEncoder();
+var payload = enc.encode('hi');
+var vport = 1;
+var fcnt = 1;
+pkt = lwp.unConfirmedDown(payload, fport, fcnt, []);
+
+```
+
+## LoraWanPacket.unConfirmedUp(payload,fport,fcnt,fopts)
 
 Create a UnConfirmedUp packet.
 
@@ -256,21 +367,29 @@ Create a UnConfirmedUp packet.
 
   frame counter
 
+- fopts
+
+  type: plain buffer
+
+  fopts
+
 **Returns:** loraWan packet as a plain buffer
 
 ```
-// make un-confirmed Up
 var enc = new TextEncoder();
 var payload = enc.encode('hi');
 var vport = 1;
 var fcnt = 1;
-pkt = lwp.unConfirmedUp(payload, fport, fcnt);
+pkt = lwp.unConfirmedUp(payload, fport, fcnt, []);
 
 ```
 
 ## loraWanBeaconDecode(pkt,region)
 
 Decode a LoRaWAN Class B beacon.
+
+The beacon time uses GPS time and is 17 seconds ahead of UTC.
+See: https://www.usno.navy.mil/USNO/time/master-clock/leap-seconds
 
 The beacon object contains the following members:
 ```
@@ -279,6 +398,7 @@ The beacon object contains the following members:
     msg: string, // if error == true
     region: int,
     time: uint, // UTC
+    time_stamp: uint, // time stamp from beacon
     time_crc: boolean,
     info: uint8,
     info_crc: boolean,
